@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: System :: Logging",
     "Typing :: Typed",
 ]
-urls = { homepage = "https://github.com/your-org/your-repo", repository = "https://github.com/your-org/your-repo" }
+urls = { homepage = "https://github.com/gargolito/aqdlog", repository = "https://github.com/gargolito/aqdlog" }
 
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
