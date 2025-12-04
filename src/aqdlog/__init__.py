@@ -20,7 +20,7 @@ class DuplicateFilter(logging.Filter):
         return True
 
 
-def log(name: str, level="INFO", log_file=None) -> logging.Logger:
+def logger(name: str, level="INFO", log_file=None) -> logging.Logger:
     """
     Create an asynchronous logger using a QueueHandler and a QueueListener.
 
@@ -31,7 +31,9 @@ def log(name: str, level="INFO", log_file=None) -> logging.Logger:
     Returns:
         logging.Logger: The configured asynchronous logger.
     """
-    logger = logging.getLogger(name)
+
+    level: str = level.upper() if isinstance(level, str) else level
+    logger: logging.Logger = logging.getLogger(name)
     if logger.hasHandlers():
         # If the logger has handlers, it means it's already set up.
         return logger
