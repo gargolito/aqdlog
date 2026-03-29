@@ -14,6 +14,7 @@
 	- `.zst` when zstd is available
 	- `.gz` fallback when zstd is unavailable
 - Rotation retention via `backup_count` (`0..10`)
+- Optional `silent` mode to disable console fallback and parent/root propagation
 - Graceful logger shutdown via `logger.shutdown()`
 
 ## Installation
@@ -55,6 +56,7 @@ logger(
 		interval: int = 1,
 		backup_count: int = 5,
 		compress: bool = False,
+		silent: bool = False,
 ) -> logging.Logger
 ```
 
@@ -69,6 +71,7 @@ logger(
 - `interval`: Rotation interval for `time` rotation
 - `backup_count`: Number of rotated files to keep (`0..10`)
 - `compress`: Compress rotated files; requires `log_file`
+- `silent`: Disable console fallback and stop propagation to parent/root loggers
 
 ### Validation rules
 
@@ -76,11 +79,33 @@ logger(
 - `backup_count` must be between `0` and `10` (inclusive)
 - `backup_count=0` disables rollover
 
+### File-only / journald-safe mode
+
+Use `silent=True` when you want aqdlog to write only to its configured file handlers and not bubble records into parent or root loggers.
+
+```python
+from aqdlog import logger
+
+log = logger(
+	"my_service",
+	log_file="/var/log/my_service.log",
+	rotation="size",
+	max_bytes=5_000_000,
+	backup_count=3,
+	compress=True,
+	silent=True,
+)
+
+log.info("This goes to the log file only")
+log.shutdown()
+```
+
 ## Behavior notes
 
 - Duplicate suppression is based on `(level, message)` only.
 - Re-using the same logger name returns the same logger instance.
 - The returned logger includes a `shutdown()` method that stops the queue listener and closes handlers.
+- When `silent=True`, `logger.propagate` is set to `False`.
 
 ## Examples
 

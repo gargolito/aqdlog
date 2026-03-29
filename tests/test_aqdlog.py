@@ -10,6 +10,7 @@ import os
 import time
 import tempfile
 import logging
+import io
 import builtins
 import importlib
 import sys
@@ -206,6 +207,58 @@ class TestGracefulShutdown:
         log.shutdown()
         # QueueHandler and ConsoleHandler gone
         assert len(log.handlers) == 0
+
+
+class TestSilentMode:
+    def test_silent_mode_with_log_file_writes_only_to_file(self, tmp_path):
+        logfile = tmp_path / "silent.log"
+        root_stream = io.StringIO()
+        root_handler = logging.StreamHandler(root_stream)
+        root_logger = logging.getLogger()
+        original_handlers = root_logger.handlers[:]
+        original_level = root_logger.level
+
+        root_logger.handlers = [root_handler]
+        root_logger.setLevel(logging.INFO)
+
+        try:
+            log = logger(
+                "test.silent.file",
+                level="INFO",
+                log_file=str(logfile),
+                silent=True,
+            )
+
+            log.info("silent file message")
+            log.shutdown()
+
+            assert log.propagate is False
+            assert root_stream.getvalue() == ""
+            assert "silent file message" in logfile.read_text(encoding="utf-8")
+        finally:
+            root_logger.handlers = original_handlers
+            root_logger.setLevel(original_level)
+
+    def test_silent_mode_without_log_file_drops_console_output(self):
+        root_stream = io.StringIO()
+        root_handler = logging.StreamHandler(root_stream)
+        root_logger = logging.getLogger()
+        original_handlers = root_logger.handlers[:]
+        original_level = root_logger.level
+
+        root_logger.handlers = [root_handler]
+        root_logger.setLevel(logging.INFO)
+
+        try:
+            log = logger("test.silent.nofile", level="INFO", silent=True)
+            log.info("should not reach root handlers")
+            log.shutdown()
+
+            assert log.propagate is False
+            assert root_stream.getvalue() == ""
+        finally:
+            root_logger.handlers = original_handlers
+            root_logger.setLevel(original_level)
 
 
 if __name__ == "__main__":

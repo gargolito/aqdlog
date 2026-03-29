@@ -1,6 +1,6 @@
 [project]
 name = "aqdlog"
-version = "2.0.0"
+version = "2.1.0"
 description = "Asynchronous logging with queueing and deduplication"
 readme = "README.md"
 authors = [

@@ -4,6 +4,7 @@
 Example usage of aqdlog:
 - Size rotation → compresses with zstd/gzip
 - Time rotation → daily logs kept 2 days
+- Silent mode → writes only to its log file and does not propagate upward
 - Demonstrates graceful shutdown & duplicate suppression
 """
 
@@ -122,6 +123,29 @@ def example_duplicate_filter():
 
     log.shutdown()
 
+
+def example_silent_file_only():
+    print("\n📝 EXAMPLE: Silent mode (file-only, no console fallback or parent propagation)")
+    tmpdir = Path(tempfile.gettempdir()) / "aqdlog_silent_file_only"
+    tmpdir.mkdir(exist_ok=True)
+    logfile = tmpdir / "silent.log"
+
+    log = logger(
+        "example.silent",
+        level="INFO",
+        log_file=str(logfile),
+        rotation="size",
+        max_bytes=1_000,
+        backup_count=1,
+        compress=False,
+        silent=True,
+    )
+
+    log.info("This message is written only to the file.")
+    log.shutdown()
+
+    print(f"   File written: {logfile.name} ({logfile.stat().st_size} bytes)")
+
 if __name__ == "__main__":
     # All examples (will run on real temp files)
     example_size()
@@ -129,5 +153,6 @@ if __name__ == "__main__":
     example_no_compress()
     example_backup_zero()
     example_duplicate_filter()
+    example_silent_file_only()
 
     print("\n✅ All examples completed. Check temp files in your OS temp directory (e.g., /tmp).")

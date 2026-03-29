@@ -195,6 +195,7 @@ def logger(
     interval: int = 1,
     backup_count: int = 5,
     compress: bool = False,
+    silent: bool = False,
 ) -> logging.Logger:
     """Create async logger with optional rotation, compression, and retention."""
     if compress and log_file is None:
@@ -209,6 +210,7 @@ def logger(
     # If logger already has handlers and was created by aqdlog, update its level and return
     if logger_obj.hasHandlers() and hasattr(logger_obj, "queue_listener"):
         logger_obj.setLevel(level_val)
+        logger_obj.propagate = not silent
         # Ensure shutdown method exists
         if not hasattr(logger_obj, "shutdown"):
             # Try to get the existing listener and handlers
@@ -239,6 +241,7 @@ def logger(
     )
     queue_handler.setFormatter(formatter)
     logger_obj.setLevel(level_val)
+    logger_obj.propagate = not silent
     logger_obj.addHandler(queue_handler)
 
     logger_obj.addFilter(DuplicateFilter())
@@ -261,6 +264,8 @@ def logger(
             )
         else:
             raise ValueError(f"rotation={rotation!r} must be 'none','size','time'")
+    elif silent:
+        handlers.append(logging.NullHandler())
     else:
         console = logging.StreamHandler()
         console.setFormatter(formatter)
